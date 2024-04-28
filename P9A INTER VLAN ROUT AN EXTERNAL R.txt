@@ -1,0 +1,129 @@
+9A: INTER VLAN ROUT AN EXTERNAL R
+
+Objective
+Step 1: Configure the hosts.
+Configure PC hosts A and B with the IP address, subnet mask (/24), and default gateway shown in
+the topology
+Step 2: Configure the routers.
+Router(config)# hostname ISP
+ISP(config)#interface Loopback0
+ISP(config-if)# ip address 200.200.200.1 255.255.255.0
+ISP(config-if)# interface Serial0/0/0
+ISP(config-if)# ip address 192.168.1.2 255.255.255.0
+ISP(config-if)#no shutdown
+ISP(config-if)# exit
+ISP(config)# ip route 172.16,0.0 255.255.0.0 192.168.1.1
+Router(config)# hostname Gateway
+Gateway(config)# interface Serial0/0/0
+Gateway(config-if)# ip address 192.168.1.1 255.255.255.0
+Gateway(config-if)#/clockrate 64000
+Gateway(config-jf)# no shutdown
+Gateway(config-if)#exit
+Gateway(config)# ip route 0.0.0.0 0.0.0.0 192.168.1.2
+Step 3: Configure the switches.
+Switch(config)# hostname ALS1
+ALS1(config)# interface vlan 1
+ALS1(config-if)# ip address 172.16.1.101 255.255.255.0
+ALS1(config-if)# no shutdown
+ALS1(config-if)#exit
+ALS1(config)# ip default-gateway 172.16.1.1
+The following is a sample configuration for switch ALS2
+Switch(configl#hostname ALS2
+
+ALS2(config)# interface vlan 1
+ALS2(config-if)# ip address 172.16.1.102 255.255.255.0
+ALS2(config-if)# no shutdown
+ALS2(config-if)#exit
+ALS2(config)# ip default-gateway 172.16.1.1
+Step 4: Confirm the VLANS.
+ALS1# show vlan
+Step 5: Configure trunk links and EtherChannel on switches.
+ALS1# configure terminal
+ALS1(config)# interface range fastEthernet 0/11- 12
+ALS1(config-if-range)# switchport mode trunk
+ALS1(config-if-range)# channel-group 1 mode desirable
+ALS1(config-if-range)# end
+ALS2# configure terminal
+ALS2(config)# interface range fastEthernet 0/11 - 12
+ALS2(config-if-range)# switchport mode trunk
+ALS2(config-if-range)# channel-group 1 mode desirable
+ALS2(config-if-range)# end
+b. ALS1# show etherchannel summary
+1 Po1(SU)
+PAgP FaO/11(P) FaO/12(P) Step 7:Configure VTP.
+ALS2(config)# vtp mode client
+Setting device to VTP CLIENT mode.
+ALS1(config)# vtp domain SWLAB
+Changing VTP domain name from NULL to SWLAB
+ALS1(config)# vtp version 2
+ALS1# show vtp status
+ALS2# show vtp status
+Configuration last modified by 172.16.1.101 at 2-28-10 00:36:24
+Step 7: Configure VLANs and switch access ports.
+ALS1(config)# vlan 100
+ALS1(config-vlan)# name Payroll ALS1(config-vlan)# vlan
+200
+ALS1(config-vlan)# name Engineering
+ALS2# show vlan brief
+100 Payroll
+active
+200 Engineerin g
+active
+ALS1(config)#interface fastEthernet 0/6
+ALS1(config-if)# switchport mode access
+ALS1(config-if)# switchport access vlan 100
+ALS1(config-if)# spanning-tree portfast
+ALS2(config)# interface fastEthernet 0/6
+ALS2(config-if)# switchport mode access
+ALS2(config-if)# switchport access vlan 200
+ALS2(config-if)# spanning-tree portfast
+ALS1# show vlan brief
+100 Payroll
+active
+F0/6
+
+200 Engineering active
+ALS2# show vlan brief
+200 Engineering active Fa0/6
+Step 9: Configure ALS1 trunking to the Gateway router.
+ALS1(config)#interface fastEthernet 0/1
+ALS1(config-if)# switchport mode trunk
+ALS1(config-if)#end
+Note: Optionally, you can apply the spanning-tree portfast trunk command to interface Fa0/1
+of switch ALS1. This allows the link to the router to rapidly transition to the forwarding state
+despite being a trunk.
+Step 10: Configure the Gateway router Fast Ethernet interface for VLAN trunking.
+Gateway(config)# interface fastEthernet 0/0C Gateway(config-if)# no shut
+Gateway(config)#interface fastEthernet 0/0.1
+Gateway(config-subif)# description Management VLAN 1
+Gateway(config-subif)#encapsulation dot1q 1 native
+Gateway(config-subif)# ip address 172.16.1.1 255.255.255.0
+Gateway(config-subif)# interface fastEthernet 0/0.100
+Gateway(config-subif)# description Payroll VLAN 100
+Gateway(config-subif)# encapsulation dot1q 100
+Gateway(config-subif)# ip address 172.16.100.1 255.255.255.0
+The following is a sample configuration for the VLAN 200 subinterface.
+Gateway(config-subif)# interface fastEthernet 0/0.200
+Gateway(config-subif)# description Engineering VLAN 200
+Gateway(config-subif)# encapsulation dot1q 200
+Gateway(config-subif)# ip address 172.16.200.1 255.255.255.0
+Gateway(config-subif)#end
+Use the show ip interface brief command to verify the interface configuration and status.
+Gateway# show ip interface brief
+Interface IP-Address OK? Method Status
+Protocol
+FastEthernet0/0 unassigned YES unset pup
+FastEthernet0/1.1 172.16.1.1 YES manual up
+up
+FastEthernet0/1.100 172.16.100.1 YES manual up
+up
+FastEthernet0/1.200 172.16.200.1 YES manual up
+up
+Gateway# show interfaces description
+Fa0/0.1
+upup ManagementVLAN 1
+Fa0/0.100
+upup PayrollVLAN 100
+Fao/0.200
+upuap Engineering VLAN 200
+Gateway# show vlans

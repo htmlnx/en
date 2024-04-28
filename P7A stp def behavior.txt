@@ -1,0 +1,37 @@
+p7: a: stp default behaviour
+Step 1: Configure basic switch parameters.
+Switch>enable
+Switch# configure terminal
+Switch(config)# hostname ALS1
+DLS1# configure terminal
+DLS1(config)# interface range fastEthernet 0/7-12
+DLS1(config-if-range)# switchport trunk encapsulation dot1q
+DLS1(config-if-range)#switchport mode trunk
+DLS2# configure terminal
+DLS2(config)#interface range fastEthernet 0/7- 12
+DLS2(config-if-range)# switchport trunk encapsulation dot1q
+DLS2(config-if-range)#switchport mode trunk
+ALS1# configure terminal
+ALS1(config)# interface range fastEthernet 0/7 - 12
+ALS1(config-if-range)# switchport mode trunk
+ALS2# configure terminal
+ALS2(config)# interface range fastEthernet 0/7 - 12
+ALS2(config-if-range)# switchport mode trunk
+Step 2: Display default spanning tree information for allswitches.
+DLS1#show spanning-tree
+VLANOOO1
+Spanning tree enabled protocol ieee Root ID
+Priority 32769
+Address OOOa.b8a9.d680
+Cost
+19
+Fa0/9
+Desg FWD 19
+Fa0/10
+Desg FWD 19
+Fa0/11 Root FWD 19
+19 128.14 P2p
+128.11 P2p
+128.12 P2p
+128.13 P2p FaO/12
+Altn BLK

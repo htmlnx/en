@@ -1,0 +1,64 @@
+p8: a : per vlan stp behave
+
+DLS1 AND DLS2
+DLS1(config)#interface range fastEthernet 0/7 - 12
+DLS1(config-if-range)#switchport trunk encapsulation dot1q
+DLS1(config-if-range)#switchport mode trunk
+ALS1# configure terminal
+ALS1(config)# interface range fastEthernet 0/7 - 12
+ALS1(config-if-range)# switchport mode trunk
+ALS2# configure terminal
+ALS2(config)# interface range fastEthernet 0/7 - 12
+ALS2(config-if-range)# switchport mode trunk
+Step 1: Configure VTP.
+DLS1(config)# vtp mode transparent
+Setting device to VTP TRANSPARENT mode.
+DLS1(config)# vtp domain CISCO
+Changing VTP domain name from NULLtO CISCO
+DLS1(config)# vlan 10
+DLS1(config)# vlan 20
+DLS1(config-vlan)#end
+DLS1# show vlan brief.
+DLS1# show spanning-tree
+Spanning tree enabled protocol ieee Root ID
+Priority3276
+VLANOO10
+VLANOO20
+
+Step 3: Assign a root switch for each VLAN.
+DLS1(config)# spanning-tree vlan 10 priority 4096
+DLS2(config)# spanning-tree vlan 20 priority 4096
+DLS1# show spanning-tree
+VLANOO10
+This bridge is the root
+DLS2# show spanning-tree
+VLANOOO1
+This bridge is the root
+VLANOO20
+Spanning tree enabled protocol ieee oot ID
+Priority 4116
+Address 0OOa.b8a9.d680
+This bridge is the root
+ALS1# show spanning-tree
+ALS2# show spanning-tree
+Step 4: Configure RSTP.
+DLS1(config)# spanning-tree mode rapid-pvst
+DLS1# show spanning-tree
+VLANOOO1
+Spanning tree enabled protocol rstp Root ID
+Priority 32769
+Address 0OOa.b8a9.d680
+Cost
+19
+Port13 (FastEthernet0/11)
+Hello Time 2 sec Max Age 20 sec Forward Delay 15 sec
+VLANOO1O
+Spanning tree enabled protocol rstp Root ID
+Priority 4106
+Address 00Oa.b8a9.d780
+This bridge is the root
+Hello Time 2 sec Max Age 20 sec Forward Delay 15 sec
+VLANOO20
+Spanning tree enabled protocol rstp Root ID
+Priority 4116
+Address OOa,b8a9.d680

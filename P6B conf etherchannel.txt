@@ -1,0 +1,73 @@
+p6:b: stp default behavior
+
+Objective
+Configure EtherChannel.
+Step 1: Configure basic switch parameters.
+DLS1# configure terminal
+DLS1(config)# interface range fastEthernet 0/7 - 12
+DLS1(config-if-range)#switchport trunk encapsulation dot1q
+DLS1(config-if-range)# switchport mode trunk
+DLS2#configure terminal
+DLS2(config)# interface range fastEthernet 0/7 - 12
+DLS2(config-if-range)# switchport trunk encapsulation dot1q
+DLS2(config-if-range)# switchport mode trunk
+ALS1# configure terminal
+ALS1(config)# interface range fastEthernet 0/7- 12
+ALS1(config-if-range)# switchport mode trunk
+ALS2# configure terminal
+ALS2(config)# interface range fastEthernet 0/7 -12
+ALS2(config-if-range)# switchport mode trunk
+Step 2: Configure an EtherChannel with Cisco PAgP.
+ALS1# show interfaces trunk
+ON ALS1 AND ALS2
+ALS1(config)# interface range fastEthernet 0/11 - 12
+ALS1(config-if-range)# channel-group 1 mode desirable
+ALS1(config)# interface port-channel 1
+ALS1(config-if)# switchport mode trunk
+ALS1# show etherchannel summary
+Number of channel-groups in use: 1
+Number of aggregators:
+1
+
+Group Port-channel Protocol Ports
+1 Po1(SU)
+PAgP FaO/11(P) FaO/12(P)
+ALS2#show etherchannel summary
+ALS1# show interfaces trunk
+Pol on 802.1q trunking
+1
+ALS1# show spanning-tree
+Po1
+Desg FWD 12
+128.56 P2p
+Step 3: Configure an 802.3ad LACP EtherChannel.
+ALS1(config)# interface range fastEthernet 0/7-8
+ALS1(config-if-range)# channel-group 2 mode active
+Creating a port-channel interface Port-channel 2
+ALS1(config-if-range)#interface port-channel2
+ALS1(config-if)# switchport mode trunk.
+ALS1# show etherchannel summary
+1 Po2(SU) LACP FaO/7(P) FaO/8(P)
+Step 4: Configure a Layer 3 EtherChannel..
+DLS1(config)# interface range fastEthernet 0/11 - 12
+DLS1(config-if-range)# no switchport
+DLS1(config-if-range)# channel-group 3 mode desirable
+Creating a port-channel interface Port-channel 3
+DLS1(config-if-range)#interface port-channel 3
+DLS1(config-if)# ip address 10.0.0.1 255.255.255.0
+DLS2(config)# interface range fastEthernet 0/11 - 12
+DLS2(config-if-range)#no switchport
+DLS2(config-if-range)# channel-group 3 mode desirable
+Creating a port-channel interface Port-channel 3
+DLS2(config-if-range)# interface port-channel 3
+DLS2(config-if)# ip address 10.0.0.2 255.255.255.0
+DLS1# ping 10.0.0.2
+DLS1# show etherchannel summary
+Group Port-channel Protocol Ports
+-+-
+2 Po2(SU) LACP Fa0/7(P) FaO/8(P)
+3 Po3(RU) PAgP Fa0/11(P) FaO/12(P)
+Step 5: Configure load balancing.
+DLS1# show etherchannel load-balance
+ALS1(config)# port-channel load-balance src-dst-mac
+ALS1# show etherchannel load-balance

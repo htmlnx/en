@@ -1,0 +1,95 @@
+p9: inter -vlan rout n internal route cef
+
+1: Configure basic switch parameters.
+Switch(config)# hostname ALS1
+ALS1(config)# enable secret cisco
+ALS1(config)# line vty 0 15
+ALS1(config-line)# password cisco
+ALS1(config-line)# login
+Switch(config)# hostname ALS2
+ALS2(config)# enable secret cisco
+ALS2(config)#line vty 0 15
+ALS2(config-line)# password cisco
+ALS2(config-line)# login
+Switch(config)# hostname DLS1
+DLS1(config)# enable secretcisco
+DLS1(config)# line vty 0 15
+DLS1(config-line)#password cisco DLS1(config-line)# login
+ALS1(config)# interface vlan 1
+ALS1(config-if)# ip address 172.16.1.101 255.255.255.0
+ALS1(config-if)# no shutdown
+ALS2(config)# interface vlan 1
+ALS2(config-if)# ip address 172.16.1.102 255.255.255.0
+
+ALS2(config-if)# no shutdown
+DLS1(config)# interface vlan 1
+DLS1(config-if)# ip address 172.16.1.1 255. 255. 255.0 DLS1(config-if)# no shutdown
+ALS1(config)# ip default-gateway 172.16.1.1
+ALS2(config)# ip default-gateway 172.16.1.1
+Step 2: Configure trunks and EtherChannels between switches.
+DLS1(config)# interface range fastEthernetC 0/7 -8
+DLS1(config-if-range)# switchport trunk encapsulation dot1q
+DLS1(config-if-range)# switchport mode trunk
+DLS1(config-if-range)# channel-group 1 mode desirable
+Creating a port-channel interface Port-channel 1
+DLS1(config)# interface range fastEthernet 0/9- 10
+DLS1(config-if-range)# switchport trunk encapsulation dot1q
+DLS1(config-if-range)# switchport mode trunk
+DLS1(config-if-range)# channel-group 2 mode desirable
+Creating a port-channel interface Port-channel 2
+ALS1(config)# interface range fastEthernet 0/11-12
+ALS1(config-if-range)# switchport mode trunk
+ALS1(config-if-range)# channel-group 1 mode desirable
+Creating a port-channel interface Port-channel 1
+ALS1(config-if-range)# exit
+ALS1(config)# interface range fastEthernet 0/7 -8
+ALS1(config-if-range)# switchport mode trunk
+ALS1(config-if-range)# channel-group 2 mode desirable
+Creating a port-channel interface Port-channel 2
+ALS2(config)# interface range fastEthernet 0/11 - 12
+ALS2(config-if-range)# switchport mode trunk
+ALS2(config-if-range)# channel-group 1 mode desirable
+Creating a port-channel interface Port-channel 1
+ALS2(config-if-range)# exit
+ALS2(config)# interface range fastEthernet 0/9 - 10
+ALS2(config-if-range)# switchport mode trunk
+ALS2(config-if-range)# channel-group 2 mode desirable
+Creating a port-channel interface Port-channel 2
+DLS1# show interface trunk
+ALS1# show etherchannel summary
+Step 3: Configure VTP on ALS1 and ALS2.
+ALS1(config)#vtp mode client
+Setting device to VTP CLIENT mode.
+
+ALS2(config)#vtp mode client
+Setting device to VTP CLIENT mode.
+ALS2# show vtp status
+VTP Version : running VTP1 (VTP2 capable)
+Configuration Revision :O
+Maximum VLANs supported locally : 255
+Number of existing VLANs
+S
+VTP Operating Mode
+Client
+Step 4: Configure VTP on DLS1.
+DLS1(config)# vtp domain SWPOD
+DLS1(config)# vtp version 2
+DLS1(config)# vlan 100
+DLS1(config-vlan)# name Finance
+DLS1(config-vlan)# vlan 200
+DLS1(config-vlan)# name Engineering
+Step 5: Configure ports.
+ALS1(config)# interface fastEthernet 0/6
+ALS1(config-if)# switchport mode access
+ALS1(config-if)# switchport access vlan 100
+ALS2(config)# interface fastEthernet 0/6
+ALS2(config-if)# switchport mode access
+ALS2(config-if)# switchport access vlan 200
+Step 6: Configure VLAN interfaces and enable routing
+DLS1(config)# interface vlan 100
+DLS1(config-if)# ip add 172.16.100.1 255.255.255.0
+DLS1(config-if)# no shut
+DLS1(config-if)# interface vlan 200
+DLS1(config-if)# ip address 172.16.200.1 255.255.255.0 DLS1(config-if)# no shutdown
+DLS1(config)# ip routing
+DLS1# show ip route

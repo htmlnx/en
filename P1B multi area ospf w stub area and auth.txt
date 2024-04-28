@@ -1,0 +1,128 @@
+1b:multi-area ospf  area n authention
+
+Step 1: Configure addressing and loopbacks.
+R1# configure terminal
+Enter configuration commands, one per line. End with CNTL/Z.
+R1(config)# interface loopback 1
+R1(config-if)# deseription Engineering Department
+R1(config-if)# ip address 10.1.1.1 255.255,255.0
+R1(config-if)# interface serial 0/0/0
+R1(config-if)# ip address 10.1.12.1 255.255.255,0
+R1(config-if)# clockrate 64000
+R1(config-if)# no shutdown
+R2# configure terminal
+R2(config)# interface loopback 2
+R2(config-if)# description Marketing Department
+R2(config-if)# ip address 10.1.2.1 255.255.255.0
+R2(config-if)# interface serial 0/0/0
+R2(config-if)# ip address 10.1.12.2 255.255.255.0
+R2(config-if)# no shutdown
+R2(config-if)# interface serial 0/0/1
+R2(config-if)# ip address 10.1.23.2 255.255.255.0
+R2(config-if)# clockrate 64000
+R2(config-if)# no shutdown
+R3# configure terminal
+R3(config)# interface loopback 3
+R3(config-if)# description Accounting Department
+R3(config-if)# ip address 10.1.3.1 255.255.255.0
+R3(config-if)# interface loopback 20
+R3(config-if)# description Connection to another AS
+R3(config-if)# ip address 172.20.200.1 255.255.255.0
+R3(config-if)# interface serial 0/0/1
+R3(config-if)# ip address 10.1.23.3 255.255.255.0
+R3(config-if)# no shutdown
+Step 2: Add interfaces into OSPF.
+R1(config)# router ospf 1
+R1(config-router)#f network 10.1.12.0 0.0.0.255 area 0
+R1(config-router)# network 10.1.1.0 0.0.0.255 area 0
+R1(config-router)# exit
+R1(config)# interface loopback 1
+R1(config-if)# ip ospf network point-to-point
+R2(config)# router ospf 1
+R2(config-router)# network 10.1.12.0 0.0.0.255 area 0
+R2(config-router)# network 10.1.2.0 0.0.0.255 area 0
+R2(config-router)# exit
+R2(config)/ interface 1oopback 2
+R2(config-if)#ip ospf network point-to-point
+R1,R2# show ip ospf neighbour
+R1,R2# show ip route
+R2(config)# router ospf 1
+R2(config-router)# network 10.1.23.0 0.0.0.255 area 23
+R3(config)# router Ospf 1
+R3(config-router)# network 10.1.23.0 0.0.0.255 area 23
+R3(config-router)# network 10.1.3.0 0.0.0.255 area 23
+R3(config-router)#exit
+R3(config)# interface loopback 3
+R3(config-if)# ip ospf network point-to-point
+R2#show ip ospf neighbour
+R1# show ip route
+O IA 10.1.3.0 [110/129] via 10.1.12.2, 00:00:28, Serial0/0/0
+O 10.1.2.0 [110/65] via 10.1.12.2, 00:01:38, Serial0/0/0
+O IA 10.1.23.0 [1 10/128] via 10.1.12.2, 00:01:38, Serial0/0/0
+Step 3: Configure a stub area.
+R2(config)# router ospf 1
+R2(config-router)# area 23 stub
+R3(config) router ospf 1
+R3(config-router)# area 23 stub
+R2,R3# show ip ospf neighbor
+R3# show ip route
+O IA 10.1.1.0 [110/129] via 10.1.23.2, 00:00:56, Serial0/0/1
+C10.1.23.0 is directly connected, Serial0/0/1
+O*IA 0.0.0.0/0 [110/65] via 10.1.23.2, 00:00:56, Serial0/0/1
+R2# show ip ospf
+Step 4: Configure a totally stubby area.
+R3#show ip route
+R2# show ip ospf database
+R2(config)# router ospf 1
+R2(config-router)# area 23 stub no-summary
+R3# show ip route
+O*IA 0.0.0.0/0 [110/65] via 10.1.23.2, 00:00:10, Serial0/0/1
+R3#show ip ospf database
+Summary Net Link States (Area 23)
+Link ID ADV Router Age Seq# Checksum
+0.0.0.0 10.1.2.1 68 0x80000002 0x0039F5
+
+Step 5: Configure a not-so-stubby area.
+R2(config)#router ospf1
+R2(config-router)# no area 23 stub
+R2(config-router)# area 23 nssa
+R3(config)# router ospf1
+R3(config-router)# no area 23 stub
+R3(config-router)# area 23 nssa
+R3(config-router)# redistribute connected subnets
+R2# show ip ospf
+Area 23
+Number of interfaces in this area is I
+It is a NSSA area
+Perform type-7/type-5 LSA translation
+Rl#show ip route
+O E2 172.20.200.0 [1 10/20] via 10.1.12.2, 00:01:22, Serial0/0/0
+R2(config)# router ospf 1
+R2(config-router)# area 23 nssa no-summary
+R3# show ip route
+O*IA 0.0.0.0/0 [110/65] via 10.1.23.2, 00:00:20, Serial0/0/1
+R2# show ip ospf database
+Summary Net Link States (Area 23)
+Link ID ADV Router Age Seq# Checksum
+0.0.0.0 10.1.2.1 34 0x80000001 0x00C265
+Type-7 AS External Link States (Area 23)
+Link ID ADV Router Age Seq# Checksum Tag
+10.1.3.0 10.1.3.1 200 0x80000001 0x0076FC O
+Type-5 AS External Link States
+Step 6: Configure OSPF interface authentication.
+R2(config-if)# ip ospf authentication
+R2(config-if)# ip ospf authentication-key cisco
+R3(config)# interface serial 0/0/1
+R3(config-if)# ip ospf authentication
+R3(config-if)# ip ospf authentication-key cisco
+R2# show ip ospf interface serial 0/0/1
+Simple password authentication enabled
+R1(config)# interface serial 0/0/0
+R1(config-if)# ip ospf authentication message-digest
+Rl(config-if)# ip ospf message-digest-key 1 md5 cisco
+R2(config)# interface serial 0/0/0
+R2(config-if)# ip ospf authentication message-digest
+R2(config-if)#ip ospf message-digest-key 1 md5 cisco
+Rl# show ip ospf interface serial 0/0/0
+Message digest authentication enabled
+Youngest key id is 1

@@ -1,0 +1,73 @@
+p7: b:  modify default stp 
+
+Objective
+Observe what happens when the default spanning tree behavior is modified.
+DLS1# configure terminal
+DLS1(config)#interface range fastEthernet 0/7-12
+DLS1(config-if-range)# switchport trunk encapsulation dot1q
+DLS1(config-if-range)#switchport mode trunk
+DLS2# configure terminal
+DLS2(config)# interface range fastEthernet 0/7 -12
+DLS2(config-if-range)# switchport trunk encapsulation dotlq
+DLS2(config-if-range)#switchport mode trunk
+ALS1# configure terminal
+ALS1(config)# interface range fastEthernet 0/7- 12
+ALS1(config-if-range)# switchport mode trunk
+ALS2# configure terminal
+ALS2(config)# interface range fastEthernet 0/7- 12
+ALS2(config-if-range)# switchport mode trunk
+Step 1: Display default spanning tree information for all switches.
+PERFORM show spanning tree on all switches
+DLS1# show spanning-tree
+DSL1# show interfaces trunk
+Step 2: Configure specific switches to be primary and secondary root.
+Primary root switch.
+DLS1(config)# spanning-tree vlan 1 root primary
+Secondary root.
+ALS1(config)# spanning-tree vlan 1 root secondary
+DLS1# show run I include span
+spanning-tree mode pvst spanning-tree extend system-id spanning-tree vlan 1 priority 2457
+
+ALS1# show run I include span
+spanning-tree mode pvst spanning-tree
+extend system-id spanning-tree vlan 1
+priority 28672
+DLS1# show spanning-tree
+Root ID Priority 24577
+Address 00Oa.b8a9.d780
+This bridge is the root
+Step 3: Change the root port using the spanning-tree port-priority command.
+DLS2# show spanning-tree
+Fa0/11
+Root FWD 19
+128.13 P2p
+Fa0/12 Altn BLK19 128.14 P2p
+DLS1#show spanning-tree
+This bridge is the root
+Fa0/11 Desg FWD 19
+28.13 P2p FaO/12
+FWD 19 128.14 P2p
+DLS1(config)# int fastEthernet 0/12
+DLS1(config-if)# spanning-tree vlan 1 port-priority 112
+DLS2# show spanning-tree
+Desg
+Port 14 (FastEthernet0/12)
+Fa0/11
+Altn BLK 19
+128.13 P2p
+Fa0/12 Root FWD19
+128.14 P2p
+DLS1# show spanning-tree
+Fa0/11
+Desg FWD 19
+128.13 P2p
+Step 4: Change root port using the spanning-tree cost command.
+ALS2# show spanning-tree
+Fa0/9
+Root FWD 19
+128.11 P2p
+ALS2(config)# interface fastEthernet 0/10
+ALS2(config-if-range)# spanning-tree vlan 1 cost 10
+ALS2# show spanning-tree
+P2p Fa0/10 Root FWD 10
+28.12 P2p

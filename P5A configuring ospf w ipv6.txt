@@ -1,0 +1,90 @@
+p5: a:  ospf forr ipv6
+
+Step 1: Configuring the hostname and loopback interfaces.
+Router (config)# hostname R1
+R1 (config)# interface loopback0
+R1 (config-if)# ip address 10.1.1.1 255.255.255.0
+R1 (config-if)# ipv6 address FEC0::1:1/112
+Router (config)# hostname R2
+R2 (config)# interface loopback0
+R2 (config-if)# ip address 10.1.2.1 255.255.255.0
+R2(config-if)# ipv6 address FEC0::2:1/112
+Router (config)# hostname R3
+R3(config)# interface loopback0
+R3 (config-if)# ip address 10.1.3.1/ 255.255.255.0
+R3 (config-if)# ipv6 address FEC0;:3:1/112
+Step 2: Configure static IPv6 addresses.
+R1 (config)# interface serial0/0/0
+R1 (config-if)# ipv6 address FEC0::12:1/112
+R1(config-if)# clockrate 64000
+R1 (config-if)# bandwidth/64
+R1 (config-if)# no shutdown
+R1 (config-if)# interface serial0/0/1
+R1 (config-if)# ipv6 address FEC0::13:1/112
+R1 (config-if)# bandwidth 64
+R1 (config-if)# no shutdown
+R2(config)# interface serial0/0/0
+R2 (config-if)# ipv6 address FEC0::12:2/112
+R2 (config-if)# bandwidth 64
+R2 (config-if)# no shutdown
+R3 (config)# interface serial0/0/0
+R3(config-if)# ipv6 address FEC0::13:3/112
+R3 (config-if)# clockrate 64000
+R3(config-if)# bandwidth 64
+R3(config-if)# no shutdown
+Rl# ping FEC0::12:2
+R1# ping FECO::13:3
+R2# ping FEC0::12:1
+R3# ping FECO::13:1
+
+Step 3: Change the link-local address on an interface.
+R1# show ipv6 interface serial 0/0/0
+R1 (config)# interface serial0/0/0
+R1 (config-if)# ipv6 address FE80::1 link-local
+R2 (config)# interface serial0/0/0
+R2 (config-if)# ipv6 address FE80::2 link-local
+R1# ping FE80::2
+R2# ping FE80::1
+R1#show ipv6 interface serial 0/0/0
+R2#show ipv6 interface serial 0/0/0
+Step 4: Configure EUI-64 addresses.
+R2 (config)# interface fastEthernet 0/0
+R2 (config-if)# ipv6 address FEC0:23::/64 eui-64
+R2(config-if)# no shutdown
+R3(config)# interface fastEthernet 0/0
+R3(config-if)# ipv6 address FEC0:23::/64 eui-64
+R3(config-if)#no shutdown
+R2# show ipv6 interface fastEthernet 0/0
+R3# show ipv6 interface brief
+R2# ping FECO:23::218:B9FF:FECD:BEFO
+Step 5: Enable IPv6 routing and CEF
+R1 (config)# ipv6 unicast-routing
+R1 (config)# ipv6 cef
+R2 (config)# ipv6 unicast-routing
+R2(config)# ipv6 cef
+R3 (config)# ipv6 unicast-routing
+R3 (config)# ipv6 cef
+Step 6: Configure OSPFv3.
+R1(config)# interface loopback0
+R1(config-if)# ipv6 ospf I area 0
+R1(config-if)# interface serial0/0/0
+R1(config-if)# ipv6 ospf I area 0
+R1 (config-if)# interface serial0/0/1
+R1 (config-if)# ipv6 ospf I area 0
+R2(config)# interface loopback0
+R2(config-if)# ipv6 ospf I area 0
+R2 (config-if)# interface serial0/0/0
+R2 (config-if)# ipv6 ospf I area 0
+R2 (config-if)# interface fastEthernet 0/0
+R2 (config-if)# ipv6 ospf I area 0
+R3 (config)# interface loopback0
+R3 (config-if)# ipv6 ospf I area 0
+R3(config-if)# interface serial0/0/0
+R3 (config-if)# ipv6 ospf I area 0
+R3(config-if)# interface fastEthernet 0/0
+R3(config-if)# ipv6 ospf I area 0 ..-_.mea nenfneiahbor command.
+b. Verify that you have OSPFy3 neighbors with the show ipv6 ospf neighbor
+G
+R1,R2,R3# show ipv6 ospf neighbor
+R1,R2,R3# show ipv6 route
+R1,R2,R3# show ípv6 ospf interface
